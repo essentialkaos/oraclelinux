@@ -1,0 +1,77 @@
+name: CD
+
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force container rebuild'
+        required: true
+        type: choice
+        options: [yes, no]
+
+jobs:
+  OracleLinux:
+    name: OracleLinux
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        version: [ '7', '7-slim', '8', '8-slim' ]
+
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Check for updates
+        id: update_check
+        continue-on-error: true
+        run : |
+          if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] ; then
+            exit 1
+          else
+            case "${{ matrix.version }}" in
+              "7")      yum check-update ;;
+              "7-slim") yum check-update ;;
+              "8")      dnf check-update ;;
+              "8-slim") microdnf-check-update ;;
+              *)        exit 0 ;;
+            esac
+          fi
+
+      - name: Trigger image rebuild
+        if: ${{ steps.update_check.outcome == 'failure' }}
+        run: |
+          curl -H "Content-Type: application/json" --data '{"docker_tag": "${{ matrix.version }}"}' -X POST ${{ secrets.BUILD_TRIGGER_URL }}
+
+      - name: Check for rebuilt base image
+        if: ${{ steps.update_check.outcome != 'failure' }}
+        run: |
+          echo "Running check…"
+
+          echo "::group::Fetching base image…"
+          docker pull oraclelinux:${{ matrix.version }}
+          echo "::endgroup::"
+
+          echo "::group::Check layers digests…"
+
+          orig_dig=$(docker inspect "oraclelinux:${{ matrix.version }}" | jq -r '.[0].RootFS.Layers[0]')
+          our_dig=$(docker inspect "essentialkaos/oraclelinux:${{ matrix.version }}" | jq -r '.[0].RootFS.Layers[0]')
+
+          echo "Original: ${orig_dig}"
+          echo "Our:      ${our_dig}"
+
+          echo "::endgroup::"
+
+          if [[ "$orig_dig" != "$our_dig" ]] ; then
+            echo "Base image was updated! Sending request to DockerHub for rebuilding ${{ matrix.version }}"
+            curl -H "Content-Type: application/json" --data '{"docker_tag": "${{ matrix.version }}"}' -X POST ${{ secrets.BUILD_TRIGGER_URL }}
+          else
+            echo "No base image updates"
+          fi
