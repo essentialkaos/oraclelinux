@@ -1,0 +1,14 @@
+#!/bin/sh
+
+upd1=$(rpm -qa | sort -u | sha1sum)
+
+microdnf clean all
+microdnf update
+
+upd2=$(rpm -qa | sort -u | sha1sum)
+
+if [[ "$1" == "$2" ]] ; then
+  exit 0
+fi
+
+exit 100

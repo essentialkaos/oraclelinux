@@ -1,0 +1,18 @@
+################################################################################
+
+FROM oraclelinux:7
+
+LABEL name="EK Image with Oracle Linux 7" \
+      vendor="ESSENTIAL KAOS" \
+      maintainer="Anton Novojilov" \
+      license="Apache-2.0" \
+      version="2022.02.01"
+
+RUN yum clean all && \
+    yum -y update && \
+    yum clean all && \
+    rm -rf /var/cache/yum && \
+    rm -rf /var/lib/yum/history/* && \
+    rm -f /var/log/yum.log
+
+################################################################################

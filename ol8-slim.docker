@@ -1,0 +1,21 @@
+################################################################################
+
+FROM oraclelinux:8-slim
+
+LABEL name="EK Image with Oracle Linux 8 (Slim)" \
+      vendor="ESSENTIAL KAOS" \
+      maintainer="Anton Novojilov" \
+      license="Apache-2.0" \
+      version="2022.02.01"
+
+COPY microdnf-check-update /sbin/
+
+RUN microdnf clean all && \
+    microdnf -y update && \
+    microdnf clean all && \
+    rm -rf /var/cache/dnf && \
+    rm -rf /var/lib/dnf/* && \
+    rm -f /var/log/dnf* && \
+    rm -f /var/log/lastlog*
+
+################################################################################

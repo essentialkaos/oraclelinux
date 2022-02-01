@@ -1,0 +1,19 @@
+################################################################################
+
+FROM oraclelinux:8
+
+LABEL name="EK Image with Oracle Linux 8" \
+      vendor="ESSENTIAL KAOS" \
+      maintainer="Anton Novojilov" \
+      license="Apache-2.0" \
+      version="2022.02.01"
+
+RUN dnf clean all && \
+    dnf -y update && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf && \
+    rm -rf /var/lib/dnf/* && \
+    rm -f /var/log/dnf* && \
+    rm -f /var/log/lastlog*
+
+################################################################################
