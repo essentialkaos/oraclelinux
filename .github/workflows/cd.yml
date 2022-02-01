@@ -37,10 +37,10 @@ jobs:
             exit 1
           else
             case "${{ matrix.version }}" in
-              "7")      yum check-update ;;
-              "7-slim") yum check-update ;;
-              "8")      dnf check-update ;;
-              "8-slim") microdnf-check-update ;;
+              "7")      docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} yum check-update ;;
+              "7-slim") docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} yum check-update ;;
+              "8")      docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} dnf check-update ;;
+              "8-slim") docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} microdnf-check-update ;;
               *)        exit 0 ;;
             esac
           fi
