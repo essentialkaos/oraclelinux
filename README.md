@@ -2,7 +2,6 @@
 
 <p align="center">
   <a href="https://kaos.sh/w/oraclelinux/cd"><img src="https://kaos.sh/w/oraclelinux/cd.svg" alt="GitHub Actions CD Status" /></a>
-  <a href="https://kaos.sh/d/oraclelinux"><img src="https://img.shields.io/docker/cloud/build/essentialkaos/oraclelinux" alt="Docker Cloud Build Status"/></a>
   <a href="#license"><img src="https://gh.kaos.st/apache2.svg"></a>
 </p>
 

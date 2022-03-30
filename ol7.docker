@@ -2,13 +2,16 @@
 
 FROM oraclelinux:7
 
-LABEL name="EK Image with Oracle Linux 7" \
-      vendor="ESSENTIAL KAOS" \
-      maintainer="Anton Novojilov" \
-      license="Apache-2.0" \
-      version="2022.02.01"
+LABEL org.opencontainers.image.title="oraclelinux" \
+      org.opencontainers.image.description="EK Image with Oracle Linux 7" \
+      org.opencontainers.image.vendor="ESSENTIAL KAOS" \
+      org.opencontainers.image.authors="Anton Novojilov" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.url="https://kaos.sh/oraclelinux" \
+      org.opencontainers.image.source="https://github.com/essentialkaos/oraclelinux"
 
-RUN yum clean all && \
+RUN sed -i 's#gpgcheck=1#gpgcheck=1\nexactarch=1#g' /etc/yum.repos.d/*.repo && \
+    yum clean all && \
     yum -y update && \
     yum clean all && \
     rm -rf /var/cache/yum && \
