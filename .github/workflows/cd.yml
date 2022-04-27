@@ -33,6 +33,8 @@ jobs:
         id: update_check
         continue-on-error: true
         run : |
+          # [update-check]
+
           if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] ; then
             exit 1
           else
@@ -48,11 +50,16 @@ jobs:
       - name: Trigger image rebuild
         if: ${{ steps.update_check.outcome == 'failure' }}
         run: |
+          # [trigger-image-rebuild]
+
+          echo "::warning ::Sending request to DockerHub for rebuilding ${{ matrix.version }}"
           curl -H "Content-Type: application/json" --data '{"docker_tag": "${{ matrix.version }}"}' -X POST ${{ secrets.BUILD_TRIGGER_URL }}
 
       - name: Check for rebuilt base image
         if: ${{ steps.update_check.outcome != 'failure' }}
         run: |
+          # [digest-check]
+
           echo "Running check…"
 
           echo "::group::Fetching base image…"
@@ -70,8 +77,13 @@ jobs:
           echo "::endgroup::"
 
           if [[ "$orig_dig" != "$our_dig" ]] ; then
-            echo "Base image was updated! Sending request to DockerHub for rebuilding ${{ matrix.version }}"
+            echo "::warning ::Base image was updated! Sending request to DockerHub for rebuilding ${{ matrix.version }}"
             curl -H "Content-Type: application/json" --data '{"docker_tag": "${{ matrix.version }}"}' -X POST ${{ secrets.BUILD_TRIGGER_URL }}
           else
             echo "No base image updates"
           fi
+
+      - name: Show info about images
+        uses: essentialkaos/docker-info-action@v1
+        with:
+          image: oraclelinux:${{ matrix.version }} essentialkaos/oraclelinux:${{ matrix.version }}
