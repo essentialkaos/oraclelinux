@@ -13,6 +13,10 @@ on:
         type: choice
         options: [yes, no]
 
+permissions:
+  packages: write
+  contents: read
+
 jobs:
   OracleLinux:
     name: OracleLinux
@@ -29,61 +33,92 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Check for updates
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for rebuild
         id: update_check
         continue-on-error: true
         run : |
           # [update-check]
 
+          echo -e "::group::\033[34mChecking for packages updates…\033[0m"
+
           if [[ "${{ github.event.inputs.force_rebuild }}" == "true" ]] ; then
-            exit 1
+            echo "::warning::Rebuild ${{matrix.version}} (reason: forced rebuild)"
+            echo "::set-output name=build::true"
+            exit 0
           else
+            if ! docker pull ${{github.repository}}:${{matrix.version}} ; then
+              echo "::warning::Rebuild ${{matrix.version}} (reason: new image)"
+              echo "::set-output name=build::true"
+              exit 0
+            fi
+
+            check_command=""
+
             case "${{ matrix.version }}" in
-              "7")      docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} yum check-update ;;
-              "7-slim") docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} yum check-update ;;
-              "8")      docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} dnf check-update ;;
-              "8-slim") docker run --rm essentialkaos/oraclelinux:${{ matrix.version }} microdnf-check-update ;;
-              *)        exit 0 ;;
+              "7")      check_command="yum check-update" ;;
+              "7-slim") check_command="yum check-update" ;;
+              "8")      check_command="dnf check-update" ;;
+              "8-slim") check_command="microdnf-check-update" ;;
+              *)        exit 1 ;;
             esac
+
+            if ! docker run --rm ${{github.repository}}:${{ matrix.version }} $check_command ; then
+              echo "::warning::Rebuild ${{matrix.version}} (reason: packages update)"
+              echo "::set-output name=build::true"
+              exit 0
+            fi
           fi
 
-      - name: Trigger image rebuild
-        if: ${{ steps.update_check.outcome == 'failure' }}
-        run: |
-          # [trigger-image-rebuild]
-
-          echo "::warning ::Sending request to DockerHub for rebuilding ${{ matrix.version }}"
-          curl -H "Content-Type: application/json" --data '{"docker_tag": "${{ matrix.version }}"}' -X POST ${{ secrets.BUILD_TRIGGER_URL }}
-
-      - name: Check for rebuilt base image
-        if: ${{ steps.update_check.outcome != 'failure' }}
-        run: |
-          # [digest-check]
-
-          echo "Running check…"
-
-          echo "::group::Fetching base image…"
-          docker pull oraclelinux:${{ matrix.version }}
           echo "::endgroup::"
 
-          echo "::group::Check layers digests…"
+          echo -e "::group::\033[34mChecking for rebuilt base image…\033[0m"
 
-          orig_dig=$(docker inspect "oraclelinux:${{ matrix.version }}" | jq -r '.[0].RootFS.Layers[0]')
-          our_dig=$(docker inspect "essentialkaos/oraclelinux:${{ matrix.version }}" | jq -r '.[0].RootFS.Layers[0]')
+          docker pull oraclelinux:${{matrix.version}}
 
+          orig_dig=$(docker inspect "oraclelinux:${{matrix.version}}" | jq -r '.[0].RootFS.Layers[0]')
+          our_dig=$(docker inspect "${{github.repository}}:${{matrix.version}}" | jq -r '.[0].RootFS.Layers[0]')
+
+          echo ""
           echo "Original: ${orig_dig}"
           echo "Our:      ${our_dig}"
 
+          if [[ "$orig_dig" != "$our_dig" ]] ; then
+            echo "::warning::Rebuild ${{matrix.version}} (reason: rebuilt base image)"
+            echo "::set-output name=build::true"
+            exit 0
+          fi
+
           echo "::endgroup::"
 
-          if [[ "$orig_dig" != "$our_dig" ]] ; then
-            echo "::warning ::Base image was updated! Sending request to DockerHub for rebuilding ${{ matrix.version }}"
-            curl -H "Content-Type: application/json" --data '{"docker_tag": "${{ matrix.version }}"}' -X POST ${{ secrets.BUILD_TRIGGER_URL }}
-          else
-            echo "No base image updates"
-          fi
+      - name: Checkout
+        if: ${{ steps.update_check.outputs.build == 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Set build context
+        if: ${{ steps.update_check.outputs.build == 'true' }}
+        id: build_context
+        run: |
+          echo "::set-output name=dockerfile::ol${{matrix.version}}.docker"
+
+      - name: Rebuild and push image
+        if: ${{ steps.update_check.outputs.build == 'true' }}
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ steps.build_context.outputs.dockerfile }}
+          push: true
+          tags: |
+            ghcr.io/${{github.repository}}:${{matrix.version}}
+            ${{github.repository}}:${{matrix.version}}
 
       - name: Show info about images
         uses: essentialkaos/docker-info-action@v1
         with:
-          image: oraclelinux:${{ matrix.version }} essentialkaos/oraclelinux:${{ matrix.version }}
+          image: ${{github.repository}}:${{matrix.version}}

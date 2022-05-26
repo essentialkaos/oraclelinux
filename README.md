@@ -15,11 +15,22 @@ This repository contains Dockerfiles for Oracle Linux 7 and 8 for automatic imag
 
 ### Usage
 
+Using DockerHub:
+
 ```bash
 docker pull essentialkaos/oraclelinux:7
 docker pull essentialkaos/oraclelinux:7-slim
 docker pull essentialkaos/oraclelinux:8
 docker pull essentialkaos/oraclelinux:8-slim
+```
+
+Using GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/essentialkaos/oraclelinux:7
+docker pull ghcr.io/essentialkaos/oraclelinux:7-slim
+docker pull ghcr.io/essentialkaos/oraclelinux:8
+docker pull ghcr.io/essentialkaos/oraclelinux:8-slim
 ```
 
 ### Contributing
