@@ -24,11 +24,11 @@ jobs:
 
     strategy:
       matrix:
-        version: [ '7', '7-slim', '8', '8-slim' ]
+        version: [ '7', '7-slim', '8', '8-slim', '9', '9-slim' ]
 
     steps:
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -66,6 +66,8 @@ jobs:
               "7-slim") check_command="yum check-update" ;;
               "8")      check_command="dnf check-update" ;;
               "8-slim") check_command="microdnf-check-update" ;;
+              "9")      check_command="dnf check-update" ;;
+              "9-slim") check_command="microdnf-check-update" ;;
               *)        exit 1 ;;
             esac
 
