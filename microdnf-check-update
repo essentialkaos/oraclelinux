@@ -3,7 +3,7 @@
 upd1=$(rpm -qa | sort -u | sha1sum)
 
 microdnf clean all
-microdnf update
+microdnf update -y
 
 upd2=$(rpm -qa | sort -u | sha1sum)
 
