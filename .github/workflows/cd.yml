@@ -124,3 +124,12 @@ jobs:
         uses: essentialkaos/docker-info-action@v1
         with:
           image: ${{github.repository}}:${{matrix.version}}
+
+      - name: Scan final image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/${{github.repository}}:${{matrix.version}}'
+          format: 'table'
+          ignore-unfixed: true
+          severity: 'LOW,MEDIUM,HIGH,CRITICAL'
+          scanners: 'vuln'
