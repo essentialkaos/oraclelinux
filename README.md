@@ -11,7 +11,8 @@
 
 This repository contains Dockerfiles for Oracle Linux 7, 8, and 9 for automatic image rebuild with the latest packages installed. The resulting images are usually bigger than base images but more secure (due to the very long period between base images rebuild).
 
-**This project is not affiliated with Oracle Corporation and not officially supported by Oracle Corporation.**
+> [!IMPORTANT]
+> **This project is not affiliated with Oracle Corporation and not officially supported by Oracle Corporation.**
 
 ### Usage
 
