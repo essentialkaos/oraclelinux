@@ -133,6 +133,8 @@ jobs:
 
       - name: Scan final image with Trivy
         uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,aquasec/trivy-db,ghcr.io/aquasecurity/trivy-db
         with:
           image-ref: "${{env.REGISTRY}}/${{github.repository}}:${{matrix.version}}"
           format: "table"
