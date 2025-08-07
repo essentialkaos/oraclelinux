@@ -9,7 +9,7 @@
 
 <br/>
 
-This repository contains Dockerfiles for Oracle Linux 8, and 9 for automatic image rebuild with the latest packages installed. The resulting images are usually bigger than base images but more secure (_due to the very long period between base images rebuild_).
+This repository contains Dockerfiles for Oracle Linux 8, 9 and 10 for automatic image rebuild with the latest packages installed. The resulting images are usually bigger than base images but more secure (_due to the very long period between base images rebuild_).
 
 > [!IMPORTANT]
 > **This project is not affiliated with Oracle Corporation and not officially supported by Oracle Corporation.**
@@ -23,6 +23,8 @@ docker pull essentialkaos/oraclelinux:8
 docker pull essentialkaos/oraclelinux:8-slim
 docker pull essentialkaos/oraclelinux:9
 docker pull essentialkaos/oraclelinux:9-slim
+docker pull essentialkaos/oraclelinux:10
+docker pull essentialkaos/oraclelinux:10-slim
 ```
 
 Using GitHub Container Registry:
@@ -32,6 +34,8 @@ docker pull ghcr.io/essentialkaos/oraclelinux:8
 docker pull ghcr.io/essentialkaos/oraclelinux:8-slim
 docker pull ghcr.io/essentialkaos/oraclelinux:9
 docker pull ghcr.io/essentialkaos/oraclelinux:9-slim
+docker pull ghcr.io/essentialkaos/oraclelinux:10
+docker pull ghcr.io/essentialkaos/oraclelinux:10-slim
 ```
 
 ### Contributing
