@@ -64,13 +64,11 @@ jobs:
 
             check_command=""
 
-            case "${{matrix.version}}" in
-              "8")      check_command="dnf check-update" ;;
-              "8-slim") check_command="microdnf-check-update" ;;
-              "9")      check_command="dnf check-update" ;;
-              "9-slim") check_command="microdnf-check-update" ;;
-              *)        exit 1 ;;
-            esac
+            if [[ "${{matrix.version}}" =~ ^.*-slim$ ]] ; then
+              check_command="microdnf-check-update"
+            else
+              check_command="dnf check-update"
+            fi
 
             if ! docker run --rm "${{env.REGISTRY}}/${{github.repository}}:${{matrix.version}}" $check_command ; then
               echo "::warning::Rebuild ${{matrix.version}} (reason: packages update)"
